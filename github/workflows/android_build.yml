@@ -2,13 +2,12 @@ name: Flutter Android Build
 
 on:
   push:
-    branches: [ main, master ] # سيبدأ البناء عند الرفع على هذه الفروع
-  pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest # استخدام نظام لينكس خام ونظيف
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -18,17 +17,17 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17' # استخدام Java 17 المتوافق مع Gradle 8
+          java-version: '17'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.5' # نحدد النسخة المستقرة بدقة
+          # قمنا بتغيير النسخة لأحدث إصدار مستقر ليقبل flutter_lints 6.0.0
+          flutter-version: '3.27.4' 
           channel: 'stable'
 
       - name: Install dependencies
         run: |
-          flutter clean
           flutter pub get
 
       - name: Build APK
