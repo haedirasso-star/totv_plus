@@ -14,8 +14,8 @@ dependencies:
   flutter_bloc: ^9.1.1
   equatable: ^2.0.5
   
-  # Dependency Injection
-  get_it: ^9.2.0
+  # Dependency Injection (تم التعديل هنا ليتوافقا معاً ومع Dart 3.5)
+  get_it: ^8.0.0
   injectable: ^2.3.2
   
   # Network
@@ -24,7 +24,6 @@ dependencies:
   
   # Video Player
   video_player: ^2.8.1
-  # تم تعديل better_player لجلب النسخة المصلحة من GitHub مباشرة لتجاوز خطأ hashValues
   better_player:
     git:
       url: https://github.com/jhomlala/betterplayer.git
@@ -47,7 +46,7 @@ dependencies:
   cached_network_image: ^3.3.0
   shimmer: ^3.0.0
   flutter_spinkit: ^5.2.0
-  google_fonts: ^6.1.0
+  google_fonts: ^6.1.0        # متوافق مع Dart 3.5
   flutter_svg: ^2.0.9
   
   # Utils
@@ -62,7 +61,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^3.0.0       # متوافق مع Dart 3.5
   build_runner: ^2.4.7
   injectable_generator: ^2.4.1
   freezed: ^2.4.6
