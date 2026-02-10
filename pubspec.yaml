@@ -73,9 +73,6 @@ flutter:
   
   assets:
     - assets/images/
-    - assets/icons/
-    - assets/m3u/
-  
   fonts:
     - family: Cairo
       fonts:
