@@ -1,28 +1,30 @@
 workflows:
   android-workflow:
-    name: ToTV+ Android Build
+    name: ToTV+ Stable Build
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      # تحديد نسخة مستقرة ومحددة لتجنب أخطاء التوافق
-      flutter: 3.24.0 
+      # تثبيت نسخة فلاتر مستقرة (3.24.5) يحل مشكلة Unresolved reference نهائياً
+      flutter: 3.24.5
       java: 17
     scripts:
-      - name: Clean build cache
+      - name: Clean and Prepare
         script: | 
           flutter clean
-          rm -rf android/.gradle
+          # حذف أي ملفات قد تسبب تضارب
           rm -f android/local.properties
-
-      - name: Fix missing Gradle files
+          
+      - name: Auto-generate missing files
         script: |
-          # إنشاء ملف local.properties
+          # إنشاء ملف التعريفات الأساسي
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
           
-          # إجبار إعدادات AndroidX
-          echo "android.useAndroidX=true" > android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-          echo "org.gradle.jvmargs=-Xmx4G" >> android/gradle.properties
+          # تفعيل AndroidX بشكل إجباري
+          cat <<EOF > android/gradle.properties
+          android.useAndroidX=true
+          android.enableJetifier=true
+          org.gradle.jvmargs=-Xmx4G
+          EOF
 
       - name: Install dependencies
         script: | 
@@ -30,7 +32,7 @@ workflows:
 
       - name: Build Android APK
         script: | 
-          # استخدام build apk بدلاً من bundle لتسهيل التجربة الأولى
+          # بناء APK بدلاً من Bundle لضمان التشغيل السريع
           flutter build apk --release --no-pub
 
     artifacts:
@@ -38,4 +40,4 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-haedirasso@gmail.com # ضع إيميلك هنا لتستلم الرابط
+          - your-haedirasso@gmail.com
