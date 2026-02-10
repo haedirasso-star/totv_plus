@@ -3,7 +3,7 @@ name: Flutter Android Build
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:
+  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً
 
 jobs:
   build:
@@ -22,12 +22,13 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          # قمنا بتغيير النسخة لأحدث إصدار مستقر ليقبل flutter_lints 6.0.0
-          flutter-version: '3.27.4' 
+          # تم التحديث للنسخة التي طلبها المحرك لضمان وجود Dart 3.8.0
+          flutter-version: '3.38.9' 
           channel: 'stable'
 
       - name: Install dependencies
         run: |
+          # حذفنا flutter clean لتوفير الوقت لأن البيئة جديدة دائماً
           flutter pub get
 
       - name: Build APK
