@@ -1,40 +1,46 @@
 workflows:
   android-workflow:
-    name: ToTV+ Build Fix
+    name: ToTV+ Ultimate Fix Build
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      # سنستخدم نسخة مستقرة تماماً وأقدم قليلاً لضمان الهروب من الخطأ
-      flutter: 3.22.2 
+      # نستخدم القناة المستقرة ونترك السيرفر يختار أحدث نسخة stable
+      flutter: stable
       java: 17
     scripts:
-      - name: Hard Reset and Clean
-        script: | 
-          # تنظيف شامل وحذف الكاش الذي قد يحتوي على الملفات المعطوبة
-          flutter clean
-          flutter pub cache repair
-          rm -rf android/.gradle
-          rm -rf android/app/build
-          
-      - name: Generate Core Files
+      - name: Force Flutter Stable
         script: |
-          # إعادة إنشاء الملفات الأساسية برمجياً لضمان عدم فقدانها
+          # هذا السطر يضمن أننا لسنا على نسخة Master المعطوبة
+          flutter channel stable
+          flutter upgrade --force
+          flutter doctor
+
+      - name: Clean Build Environment
+        script: |
+          flutter clean
+          rm -rf android/.gradle
+          rm -f android/local.properties
+
+      - name: Setup Android Files
+        script: |
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
           
+          # إجبار إعدادات الذاكرة لـ Kotlin
           cat <<EOF > android/gradle.properties
           android.useAndroidX=true
           android.enableJetifier=true
           org.gradle.jvmargs=-Xmx4G
+          kotlin.code.style=official
           EOF
 
       - name: Install dependencies
-        script: | 
+        script: |
           flutter pub get
 
-      - name: Build APK (Force)
-        script: | 
-          # استخدام apk بدلاً من bundle لأن الـ bundle يمر بمراحل فحص أكثر صرامة
-          flutter build apk --release --force
+      - name: Build APK (Release)
+        script: |
+          # سنستخدم build apk بدلاً من bundle لتجنب تعقيدات الـ bundle الحالية
+          flutter build apk --release --no-pub --target-platform android-arm64
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
