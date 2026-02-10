@@ -4,53 +4,38 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      flutter: stable
-      groups:
-        - google_play_credentials # إذا كنت تستخدم مفاتيح تشفير
+      # تحديد نسخة مستقرة ومحددة لتجنب أخطاء التوافق
+      flutter: 3.24.0 
+      java: 17
     scripts:
-      - name: Set up local.properties
+      - name: Clean build cache
         script: | 
-          # إنشاء ملف local.properties تلقائياً لتعريف مسار SDK
-          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-          echo "sdk.dir=$ANDROID_SDK_ROOT" >> android/local.properties
+          flutter clean
+          rm -rf android/.gradle
+          rm -f android/local.properties
 
-      - name: Ensure Android configuration files exist
+      - name: Fix missing Gradle files
         script: |
-          # التحقق من وجود ملف settings.gradle وإعادة إنشائه إذا فُقد
-          if [ ! -f "android/settings.gradle" ]; then
-            cat <<EOF > android/settings.gradle
-          pluginManagement {
-              def flutterSdkPath = {
-                  def properties = new Properties()
-                  def file = new File(settingsDir, '../local.properties')
-                  if (file.exists()) { file.withInputStream { properties.load(it) } }
-                  def sdkPath = properties.getProperty('flutter.sdk')
-                  if (sdkPath == null) { sdkPath = System.getenv('FLUTTER_ROOT') }
-                  return sdkPath
-              }()
-              includeBuild("\$flutterSdkPath/packages/flutter_tools/gradle")
-              repositories { google(); mavenCentral(); gradlePluginPortal() }
-          }
-          plugins {
-              id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
-              id "com.android.application" version "8.2.1" apply false
-              id "org.jetbrains.kotlin.android" version "1.9.22" apply false
-          }
-          include ":app"
-          EOF
-          fi
+          # إنشاء ملف local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+          
+          # إجبار إعدادات AndroidX
+          echo "android.useAndroidX=true" > android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx4G" >> android/gradle.properties
 
       - name: Install dependencies
         script: | 
           flutter pub get
-          
+
       - name: Build Android APK
         script: | 
-          flutter build apk --release --no-codesign
+          # استخدام build apk بدلاً من bundle لتسهيل التجربة الأولى
+          flutter build apk --release --no-pub
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
     publishing:
       email:
         recipients:
-          - your-haedirasso@gmail.com
+          - your-haedirasso@gmail.com # ضع إيميلك هنا لتستلم الرابط
