@@ -1,0 +1,41 @@
+name: Flutter Android Build
+
+on:
+  push:
+    branches: [ main, master ] # سيبدأ البناء عند الرفع على هذه الفروع
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # استخدام نظام لينكس خام ونظيف
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17' # استخدام Java 17 المتوافق مع Gradle 8
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5' # نحدد النسخة المستقرة بدقة
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --target-platform android-arm64
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
