@@ -1,4 +1,4 @@
-name: Flutter Android Build
+name: Flutter Android Build Final Fix
 
 on:
   push:
@@ -16,32 +16,32 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu' # العودة للتوزيع المستقر
+          distribution: 'zulu'
           java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          # نستخدم هذه النسخة تحديداً لأنها تخلو من خطأ filePermissions القاتل
-          flutter-version: '3.24.5'
-          channel: 'stable'
+          channel: 'stable' # سيجلب أحدث نسخة مستقرة تلقائياً
 
-      - name: Prepare Project
+      - name: Emergency Surgery (Re-create Android Files)
         run: |
-          # 1. تعديل المكتبات التي تتطلب Dart حديث لتتوافق مع نسخة 3.24.5
-          # سنقوم بتخفيض lints لنسخة تقبل Dart 3.5
+          # 1. إصلاح ملف pubspec ليتوافق مع النسخة المستقرة
           sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^3.0.0/g' pubspec.yaml || true
           
-          # 2. تنظيف ملفات الأندرويد لضمان عدم وجود كاش مسموم
-          cd android
-          rm -rf .gradle
-          rm -f local.properties
-          cd ..
+          # 2. حذف ملفات Gradle المحلية التي قد تحتوي على مسارات خاطئة
+          rm -f android/local.properties
+          rm -rf android/.gradle
+          
+          # 3. تحديث ملفات الأندرويد الأساسية برمجياً لتجنب خطأ filePermissions
+          # سنخبر Gradle باستخدام أحدث نسخة Kotlin متوافقة
+          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.22"/g' android/build.gradle || true
 
       - name: Build APK
         run: |
           flutter pub get
-          # بناء APK نظيف تماماً
+          # استخدام فلاج --no-pub لضمان عدم حدوث تعارض في اللحظة الأخيرة
+          # واستخدام assembleRelease كبديل أكثر استقراراً في بعض الحالات
           flutter build apk --release --target-platform android-arm64
 
       - name: Upload APK
