@@ -1,0 +1,46 @@
+name: Flutter Android Build
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Force Install Latest Flutter
+        # هنا نقوم بتجاوز الأداة الجاهزة وتحميل فلاتر يدوياً لضمان أحدث نسخة
+        run: |
+          git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+          echo "$HOME/flutter/bin/cache/dart-sdk/bin" >> $GITHUB_PATH
+
+      - name: Fix Dependencies and Build
+        run: |
+          # التأكد من استخدام النسخة التي حملناها
+          export PATH="$PATH:$HOME/flutter/bin"
+          flutter --version
+          
+          # تعديل ملف pubspec.yaml برمجياً ليتناسب مع أي نسخة Dart موجودة
+          # هذا السطر سيقوم بتغيير نسخة lints لنسخة متوافقة تلقائياً
+          sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^5.0.0/g' pubspec.yaml || true
+          
+          flutter pub get
+          flutter build apk --release --target-platform android-arm64
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
