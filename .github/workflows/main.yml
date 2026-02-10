@@ -19,25 +19,32 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Force Install Latest Flutter
-        # هنا نقوم بتجاوز الأداة الجاهزة وتحميل فلاتر يدوياً لضمان أحدث نسخة
+      - name: Force Install and Patch Flutter
         run: |
+          # 1. تحميل فلاتر
           git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
-          echo "$HOME/flutter/bin/cache/dart-sdk/bin" >> $GITHUB_PATH
-
-      - name: Fix Dependencies and Build
-        run: |
-          # التأكد من استخدام النسخة التي حملناها
           export PATH="$PATH:$HOME/flutter/bin"
-          flutter --version
           
-          # تعديل ملف pubspec.yaml برمجياً ليتناسب مع أي نسخة Dart موجودة
-          # هذا السطر سيقوم بتغيير نسخة lints لنسخة متوافقة تلقائياً
+          # 2. العملية الجراحية: حذف الأسطر المسببة للخطأ في ملف FlutterPlugin.kt
+          # هذا الملف هو الذي يحتوي على الأسطر 744-747 التي تفشل في القراءة
+          FLUTTER_PLUGIN_FILE="$HOME/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt"
+          echo "Patching $FLUTTER_PLUGIN_FILE..."
+          
+          # سنقوم بتعطيل الأسطر التي تحاول الوصول لـ filePermissions لأنها غير مدعومة في نسخة Kotlin الحالية
+          sed -i '744,747s/^/\/\//' "$FLUTTER_PLUGIN_FILE"
+          
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+
+      - name: Build APK
+        run: |
+          export PATH="$PATH:$HOME/flutter/bin"
+          
+          # ترقيع ملف الـ lints لضمان عدم توقف pub get
           sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^5.0.0/g' pubspec.yaml || true
           
           flutter pub get
-          flutter build apk --release --target-platform android-arm64
+          # نستخدم --no-shrink لتقليل تعقيد عملية Kotlin
+          flutter build apk --release --target-platform android-arm64 --no-shrink
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
