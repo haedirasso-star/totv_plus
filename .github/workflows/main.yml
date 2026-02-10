@@ -1,19 +1,16 @@
-name: Flutter Android Build Final Fix
+name: Flutter Build Fix 2026
 
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Java
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
@@ -22,30 +19,19 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable' # سيجلب أحدث نسخة مستقرة تلقائياً
-
-      - name: Emergency Surgery (Re-create Android Files)
-        run: |
-          # 1. إصلاح ملف pubspec ليتوافق مع النسخة المستقرة
-          sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^3.0.0/g' pubspec.yaml || true
-          
-          # 2. حذف ملفات Gradle المحلية التي قد تحتوي على مسارات خاطئة
-          rm -f android/local.properties
-          rm -rf android/.gradle
-          
-          # 3. تحديث ملفات الأندرويد الأساسية برمجياً لتجنب خطأ filePermissions
-          # سنخبر Gradle باستخدام أحدث نسخة Kotlin متوافقة
-          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.22"/g' android/build.gradle || true
+          # سنستخدم نسخة أقدم قليلاً لتفادي خطأ filePermissions القاتل
+          flutter-version: '3.22.0' 
+          channel: 'stable'
 
       - name: Build APK
         run: |
+          # إصلاح تعارض المكتبات
+          sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^3.0.0/g' pubspec.yaml || true
           flutter pub get
-          # استخدام فلاج --no-pub لضمان عدم حدوث تعارض في اللحظة الأخيرة
-          # واستخدام assembleRelease كبديل أكثر استقراراً في بعض الحالات
           flutter build apk --release --target-platform android-arm64
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
+          name: my-app-release
           path: build/app/outputs/flutter-apk/app-release.apk
