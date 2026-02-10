@@ -7,12 +7,9 @@ buildscript {
     }
 
     dependencies {
-        // نسخة Gradle المتوافقة مع Codemagic
-        classpath 'com.android.tools.build:gradle:8.2.1'
+        // تم تغيير النسخة إلى 7.4.2 لتكون أكثر مرونة مع المكتبات القديمة مثل better_player
+        classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        
-        // ملاحظة: قمنا بإزالة سطر dev.flutter لأنه يسبب خطأ "Could not find"
-        // فلاتر سيقوم بربط نفسه تلقائياً من خلال ملف الإعدادات الداخلي
         
         // خدمات جوجل وفايربيز
         classpath 'com.google.gms:google-services:4.4.0'
@@ -39,4 +36,18 @@ subprojects {
 // أمر تنظيف المشروع
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
+}
+
+// --- الكود المضاف أدناه لإصلاح خطأ Namespace not specified تلقائياً ---
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            android {
+                // إذا لم يكن للمكتبة namespace (مثل better_player)، سيقوم هذا السطر بتوليده لها
+                if (namespace == null) {
+                    namespace project.group
+                }
+            }
+        }
+    }
 }
