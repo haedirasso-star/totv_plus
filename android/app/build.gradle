@@ -24,7 +24,7 @@ if (flutterVersionName == null) {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.google.gms.google-services'
-// هذا السطر هو البديل لـ dev.flutter ويقوم بجلب الإعدادات من المجلد المحلي
+// ربط محرك فلاتر من المسار المحلي للسيرفر
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
@@ -42,6 +42,8 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+        // إضافة هذا السطر لضمان قراءة ملفات الجافا من أي مكان
+        main.java.srcDirs += 'src/main/java'
     }
 
     defaultConfig {
