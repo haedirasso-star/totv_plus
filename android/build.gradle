@@ -1,5 +1,5 @@
 buildscript {
-    // تم تحديث نسخة Kotlin لضمان التوافق مع محرك Flutter الحديث
+    // تم الإبقاء على نسخة Kotlin 1.9.22 لضمان استقرار الكود
     ext.kotlin_version = '1.9.22'
     repositories {
         google()
@@ -7,12 +7,12 @@ buildscript {
     }
 
     dependencies {
-        // تم تحديث نسخة Gradle لحل أخطاء التوافق مع Codemagic
+        // نسخة Gradle المتوافقة مع Codemagic
         classpath 'com.android.tools.build:gradle:8.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         
-        // --- السطر المضاف أدناه هو مفتاح الحل لربط مكتبات Flutter ---
-        classpath "dev.flutter:flutter-gradle-plugin:1.0.0"
+        // ملاحظة: قمنا بإزالة سطر dev.flutter لأنه يسبب خطأ "Could not find"
+        // فلاتر سيقوم بربط نفسه تلقائياً من خلال ملف الإعدادات الداخلي
         
         // خدمات جوجل وفايربيز
         classpath 'com.google.gms:google-services:4.4.0'
