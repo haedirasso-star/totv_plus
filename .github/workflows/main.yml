@@ -16,39 +16,33 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'oracle' # تغيير التوزيع لضمان توافق أعلى
+          distribution: 'zulu' # العودة للتوزيع المستقر
           java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          # نستخدم هذه النسخة تحديداً لأنها تخلو من خطأ filePermissions القاتل
+          flutter-version: '3.24.5'
           channel: 'stable'
 
-      - name: "Emergency Gradle & Kotlin Patch"
+      - name: Prepare Project
         run: |
-          # 1. إجبار المشروع على استخدام نسخة Kotlin حديثة جداً تدعم filePermissions
-          # سنقوم بتعديل ملف build.gradle الرئيسي برمجياً
-          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.22"/g' android/build.gradle
+          # 1. تعديل المكتبات التي تتطلب Dart حديث لتتوافق مع نسخة 3.24.5
+          # سنقوم بتخفيض lints لنسخة تقبل Dart 3.5
+          sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^3.0.0/g' pubspec.yaml || true
           
-          # 2. تحديث نسخة Gradle Wrapper لضمان دعم Kotlin الحديث
+          # 2. تنظيف ملفات الأندرويد لضمان عدم وجود كاش مسموم
           cd android
-          ./gradlew wrapper --gradle-version 8.5
+          rm -rf .gradle
+          rm -f local.properties
           cd ..
-
-          # 3. إضافة إعدادات القوة في gradle.properties
-          echo "org.gradle.jvmargs=-Xmx4G" >> android/gradle.properties
-          echo "android.useAndroidX=true" >> android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-          echo "kotlin.incremental=false" >> android/gradle.properties
 
       - name: Build APK
         run: |
-          # إصلاح تضارب المكتبات قبل البدء
-          sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^5.0.0/g' pubspec.yaml || true
-          
           flutter pub get
-          # تشغيل البناء مع تنظيف الكاش الخاص بـ Gradle
-          flutter build apk --release --target-platform android-arm64 --no-pub
+          # بناء APK نظيف تماماً
+          flutter build apk --release --target-platform android-arm64
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
