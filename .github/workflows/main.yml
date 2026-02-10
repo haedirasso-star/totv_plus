@@ -19,32 +19,28 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Force Install and Patch Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: "Deep Fix: Gradle & Kotlin Compatibility"
         run: |
-          # 1. تحميل فلاتر
-          git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
-          export PATH="$PATH:$HOME/flutter/bin"
+          # 1. تحديث نسخة Kotlin في مشروع الأندرويد لنسخة تدعم filePermissions
+          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.22"/g' android/build.gradle || true
           
-          # 2. العملية الجراحية: حذف الأسطر المسببة للخطأ في ملف FlutterPlugin.kt
-          # هذا الملف هو الذي يحتوي على الأسطر 744-747 التي تفشل في القراءة
-          FLUTTER_PLUGIN_FILE="$HOME/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt"
-          echo "Patching $FLUTTER_PLUGIN_FILE..."
-          
-          # سنقوم بتعطيل الأسطر التي تحاول الوصول لـ filePermissions لأنها غير مدعومة في نسخة Kotlin الحالية
-          sed -i '744,747s/^/\/\//' "$FLUTTER_PLUGIN_FILE"
-          
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+          # 2. إجبار Gradle على تجاهل أخطاء الـ Metadata الناتجة عن تعارض النسخ
+          echo "kotlin.incremental=false" >> android/gradle.properties
+          echo "android.jetifier.ignorelist=flutter_tools" >> android/gradle.properties
 
       - name: Build APK
         run: |
-          export PATH="$PATH:$HOME/flutter/bin"
-          
-          # ترقيع ملف الـ lints لضمان عدم توقف pub get
+          # ترقيع الـ lints ليتوافق مع Dart الموجود في السيرفر
           sed -i 's/flutter_lints: ^6.0.0/flutter_lints: ^5.0.0/g' pubspec.yaml || true
           
           flutter pub get
-          # نستخدم --no-shrink لتقليل تعقيد عملية Kotlin
-          flutter build apk --release --target-platform android-arm64 --no-shrink
+          # استخدام --no-pub لضمان عدم حدوث تضارب في اللحظة الأخيرة
+          flutter build apk --release --target-platform android-arm64 --no-pub
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
