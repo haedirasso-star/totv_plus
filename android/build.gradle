@@ -1,13 +1,17 @@
 buildscript {
-    ext.kotlin_version = '1.9.10'
+    // تم تحديث نسخة Kotlin إلى 1.9.22 لضمان التوافق مع محرك Flutter الحديث
+    ext.kotlin_version = '1.9.22'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.0'
+        // تم تحديث نسخة Gradle إلى 8.2.1 لحل أخطاء التوافق مع Codemagic
+        classpath 'com.android.tools.build:gradle:8.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        
+        // خدمات جوجل وفايربيز (متوافقة مع النسخ التي نستخدمها)
         classpath 'com.google.gms:google-services:4.4.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
     }
@@ -20,6 +24,7 @@ allprojects {
     }
 }
 
+// إعداد مجلدات البناء
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
@@ -28,6 +33,7 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
+// أمر تنظيف المشروع
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
