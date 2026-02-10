@@ -22,18 +22,19 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          # حذفنا رقم النسخة وتركنا القناة المستقرة فقط لضمان تحميل أحدث Dart SDK
+          # نستخدم أحدث نسخة مستقرة متوفرة في عام 2026
           channel: 'stable'
-          cache: true # لتسريع البناء في المرات القادمة
+          # حذفنا سطر الإصدار المحدد لنجبره على جلب الأحدث من الخادم مباشرة
+          cache: false # تعطيل الكاش مؤقتاً لإجباره على التحديث
 
       - name: Install dependencies
         run: |
-          # نستخدم --legacy-conflicting-dependency-handler إذا لزم الأمر، لكن pub get تكفي
+          # سنحاول تجاوز مشكلة النسخة بطلب تحديث المكتبات لتناسب Dart الموجود
+          flutter pub upgrade 
           flutter pub get
 
       - name: Build APK
         run: |
-          # إضافة ميزة التغلب على أي مشاكل في الصلاحيات قد تظهر
           flutter build apk --release --target-platform android-arm64
 
       - name: Upload APK
