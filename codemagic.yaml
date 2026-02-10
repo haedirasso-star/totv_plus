@@ -1,37 +1,40 @@
 workflows:
   android-workflow:
-    name: ToTV+ Stable Build
+    name: ToTV+ Build Rescue
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      # نضع نسخة مستقرة هنا
-      flutter: 3.24.5 
+      # نستخدم القناة المستقرة حصراً
+      flutter: stable 
       java: 17
     scripts:
-      - name: Force Fix Flutter Tools
-        script: |
-          # الانتقال للقناة المستقرة وحذف أي ملفات تالفة في أدوات فلاتر
+      - name: Force Overwrite Flutter Tools
+        script: | 
+          # هذه الخطوات ستقوم بإصلاح محرك فلاتر في السيرفر نفسه
           flutter channel stable
           flutter upgrade --force
-          flutter doctor
-
-      - name: Clean and Setup
-        script: |
-          flutter clean
+          
+          # حذف أي ملفات كاش قديمة لـ Kotlin قد تكون عالقة
           rm -rf android/.gradle
+          rm -rf android/app/build
+          
+      - name: Re-generate Android Files
+        script: |
+          # إنشاء الملفات الضرورية برمجياً لضمان عدم وجود نقص
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
           
-          # إعدادات الذاكرة لـ Kotlin
           cat <<EOF > android/gradle.properties
           android.useAndroidX=true
           android.enableJetifier=true
           org.gradle.jvmargs=-Xmx4G
+          # السطر التالي يحل مشاكل التوافق في Kotlin
+          kotlin.incremental=false
           EOF
 
-      - name: Build APK
+      - name: Build APK (Not Bundle)
         script: |
           flutter pub get
-          # بناء APK بدلاً من Bundle لتجنب الخطأ في FlutterPlugin.kt
+          # بناء APK مباشرة يتفادى خطأ bundleRelease الذي يظهر في سجلاتك
           flutter build apk --release --no-pub --target-platform android-arm64
 
     artifacts:
