@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
             systemOverlayStyle: SystemUiOverlayStyle.light,
           ),
           // تم إصلاح الخطأ هنا من CardTheme إلى CardThemeData
-          cardTheme: CardThemeData(
+          cardTheme: CardTheme(
             color: Colors.grey[900],
             elevation: 0,
             shape: RoundedRectangleBorder(
