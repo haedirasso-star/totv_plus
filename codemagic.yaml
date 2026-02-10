@@ -1,45 +1,37 @@
 workflows:
   android-workflow:
-    name: ToTV+ Ultimate Fix Build
+    name: ToTV+ Stable Build
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      # نستخدم القناة المستقرة ونترك السيرفر يختار أحدث نسخة stable
-      flutter: stable
+      # نضع نسخة مستقرة هنا
+      flutter: 3.24.5 
       java: 17
     scripts:
-      - name: Force Flutter Stable
+      - name: Force Fix Flutter Tools
         script: |
-          # هذا السطر يضمن أننا لسنا على نسخة Master المعطوبة
+          # الانتقال للقناة المستقرة وحذف أي ملفات تالفة في أدوات فلاتر
           flutter channel stable
           flutter upgrade --force
           flutter doctor
 
-      - name: Clean Build Environment
+      - name: Clean and Setup
         script: |
           flutter clean
           rm -rf android/.gradle
-          rm -f android/local.properties
-
-      - name: Setup Android Files
-        script: |
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
           
-          # إجبار إعدادات الذاكرة لـ Kotlin
+          # إعدادات الذاكرة لـ Kotlin
           cat <<EOF > android/gradle.properties
           android.useAndroidX=true
           android.enableJetifier=true
           org.gradle.jvmargs=-Xmx4G
-          kotlin.code.style=official
           EOF
 
-      - name: Install dependencies
+      - name: Build APK
         script: |
           flutter pub get
-
-      - name: Build APK (Release)
-        script: |
-          # سنستخدم build apk بدلاً من bundle لتجنب تعقيدات الـ bundle الحالية
+          # بناء APK بدلاً من Bundle لتجنب الخطأ في FlutterPlugin.kt
           flutter build apk --release --no-pub --target-platform android-arm64
 
     artifacts:
@@ -47,4 +39,4 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com
+          - your-haedirasso@gmail.com
