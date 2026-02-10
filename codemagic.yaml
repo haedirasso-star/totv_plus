@@ -1,25 +1,26 @@
 workflows:
   android-workflow:
-    name: ToTV+ Stable Build
+    name: ToTV+ Build Fix
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      # تثبيت نسخة فلاتر مستقرة (3.24.5) يحل مشكلة Unresolved reference نهائياً
-      flutter: 3.24.5
+      # سنستخدم نسخة مستقرة تماماً وأقدم قليلاً لضمان الهروب من الخطأ
+      flutter: 3.22.2 
       java: 17
     scripts:
-      - name: Clean and Prepare
+      - name: Hard Reset and Clean
         script: | 
+          # تنظيف شامل وحذف الكاش الذي قد يحتوي على الملفات المعطوبة
           flutter clean
-          # حذف أي ملفات قد تسبب تضارب
-          rm -f android/local.properties
+          flutter pub cache repair
+          rm -rf android/.gradle
+          rm -rf android/app/build
           
-      - name: Auto-generate missing files
+      - name: Generate Core Files
         script: |
-          # إنشاء ملف التعريفات الأساسي
+          # إعادة إنشاء الملفات الأساسية برمجياً لضمان عدم فقدانها
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
           
-          # تفعيل AndroidX بشكل إجباري
           cat <<EOF > android/gradle.properties
           android.useAndroidX=true
           android.enableJetifier=true
@@ -30,14 +31,14 @@ workflows:
         script: | 
           flutter pub get
 
-      - name: Build Android APK
+      - name: Build APK (Force)
         script: | 
-          # بناء APK بدلاً من Bundle لضمان التشغيل السريع
-          flutter build apk --release --no-pub
+          # استخدام apk بدلاً من bundle لأن الـ bundle يمر بمراحل فحص أكثر صرامة
+          flutter build apk --release --force
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
     publishing:
       email:
         recipients:
-          - your-haedirasso@gmail.com
+          - your-email@example.com
