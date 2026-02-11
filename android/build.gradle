@@ -1,5 +1,5 @@
 buildscript {
-    // نسخة Kotlin المستقرة
+    // نسخة Kotlin المستقرة والمتوافقة
     ext.kotlin_version = '1.9.22'
     repositories {
         google()
@@ -7,8 +7,8 @@ buildscript {
     }
 
     dependencies {
-        // استخدام نسخة 7.4.2 لضمان التوافق مع المكتبات التي تفتقد لـ Namespace
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        // تم التحديث إلى 8.0.2 لحل خطأ "Minimum supported Gradle version is 8.0"
+        classpath 'com.android.tools.build:gradle:8.0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         
         // خدمات جوجل وفايربيز
@@ -21,17 +21,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-    }
-    
-    // حل مشكلة Namespace not specified بطريقة فورية (تجنب خطأ afterEvaluate)
-    subprojects {
-        project.configurations.all {
-            resolutionStrategy.eachDependency { details ->
-                if (details.requested.group == 'com.android.tools.build' && details.requested.name == 'gradle') {
-                    details.useVersion '7.4.2'
-                }
-            }
-        }
     }
 }
 
@@ -49,12 +38,15 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
-// الكود السحري لإصلاح المكتبات القديمة تلقائياً
+// الكود السحري المطور لإصلاح مشكلة Namespace في Gradle 8.0+
+// هذا الجزء يمر على كل المكتبات (مثل better_player) ويضيف لها التعريف الناقص برمجياً
 subprojects {
-    project.plugins.withType(com.android.build.gradle.BasePlugin.class).all {
-        project.android {
-            if (namespace == null) {
-                namespace project.group
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            android {
+                if (namespace == null) {
+                    namespace project.group
+                }
             }
         }
     }
