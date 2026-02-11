@@ -1,5 +1,5 @@
 buildscript {
-    // تم الإبقاء على نسخة Kotlin 1.9.22 لضمان استقرار الكود
+    // نسخة Kotlin المستقرة
     ext.kotlin_version = '1.9.22'
     repositories {
         google()
@@ -7,7 +7,7 @@ buildscript {
     }
 
     dependencies {
-        // تم تغيير النسخة إلى 7.4.2 لتكون أكثر مرونة مع المكتبات القديمة مثل better_player
+        // استخدام نسخة 7.4.2 لضمان التوافق مع المكتبات التي تفتقد لـ Namespace
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         
@@ -21,6 +21,17 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+    
+    // حل مشكلة Namespace not specified بطريقة فورية (تجنب خطأ afterEvaluate)
+    subprojects {
+        project.configurations.all {
+            resolutionStrategy.eachDependency { details ->
+                if (details.requested.group == 'com.android.tools.build' && details.requested.name == 'gradle') {
+                    details.useVersion '7.4.2'
+                }
+            }
+        }
     }
 }
 
@@ -38,15 +49,12 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
-// --- الكود المضاف أدناه لإصلاح خطأ Namespace not specified تلقائياً ---
+// الكود السحري لإصلاح المكتبات القديمة تلقائياً
 subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            android {
-                // إذا لم يكن للمكتبة namespace (مثل better_player)، سيقوم هذا السطر بتوليده لها
-                if (namespace == null) {
-                    namespace project.group
-                }
+    project.plugins.withType(com.android.build.gradle.BasePlugin.class).all {
+        project.android {
+            if (namespace == null) {
+                namespace project.group
             }
         }
     }
