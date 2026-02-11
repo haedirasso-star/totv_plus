@@ -9,7 +9,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:8.0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.4.0'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
+        classpath 'get.google.firebase:firebase-crashlytics-gradle:2.9.9'
     }
 }
 
@@ -32,12 +32,15 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
-// الحل القوي والنهائي لمشكلة Namespace في Gradle 8
-// هذا الكود يبحث عن الباكج داخل ملف المانيفست لكل مكتبة ويضعه كـ namespace
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            android {
+/**
+ * الحل النهائي لمشكلة Namespace في Gradle 8+
+ * تم استبدال afterEvaluate بـ configureEach لتجنب خطأ 
+ * "Cannot run Project.afterEvaluate when the project is already evaluated"
+ */
+subprojects { project ->
+    project.plugins.configureEach { plugin ->
+        if (plugin.class.name.contains('com.android.build.gradle.BasePlugin')) {
+            project.android {
                 if (namespace == null) {
                     try {
                         def manifestFile = file("${project.projectDir}/src/main/AndroidManifest.xml")
@@ -45,15 +48,15 @@ subprojects {
                             def parsedManifest = new XmlParser().parse(manifestFile)
                             def packageName = parsedManifest."@package"
                             if (packageName) {
-                                namespace packageName
+                                namespace = packageName
                             } else {
-                                namespace project.group
+                                namespace = project.group
                             }
                         } else {
-                            namespace project.group
+                            namespace = project.group
                         }
                     } catch (Exception e) {
-                        namespace project.group
+                        namespace = project.group
                     }
                 }
             }
