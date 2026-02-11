@@ -9,7 +9,8 @@ buildscript {
         classpath 'com.android.tools.build:gradle:8.0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.4.0'
-        classpath 'get.google.firebase:firebase-crashlytics-gradle:2.9.9'
+        // التصحيح هنا: com بدلاً من get
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
     }
 }
 
@@ -34,8 +35,6 @@ tasks.register("clean", Delete) {
 
 /**
  * الحل النهائي لمشكلة Namespace في Gradle 8+
- * تم استبدال afterEvaluate بـ configureEach لتجنب خطأ 
- * "Cannot run Project.afterEvaluate when the project is already evaluated"
  */
 subprojects { project ->
     project.plugins.configureEach { plugin ->
