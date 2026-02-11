@@ -38,12 +38,13 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
-// الكود السحري المطور لإصلاح مشكلة Namespace في Gradle 8.0+
-// هذا الجزء يمر على كل المكتبات (مثل better_player) ويضيف لها التعريف الناقص برمجياً
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            android {
+// ... (اترك الجزء العلوي كما هو حتى نهاية clean task)
+
+// الحل النهائي والأكثر استقراراً لـ Namespace في Gradle 8+
+subprojects { project ->
+    project.plugins.configureEach {
+        if (it.class.name.contains('com.android.build.gradle.BasePlugin')) {
+            project.android {
                 if (namespace == null) {
                     namespace project.group
                 }
